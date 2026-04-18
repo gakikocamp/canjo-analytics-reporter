@@ -43,25 +43,25 @@ from google.oauth2 import service_account
 SITES = [
     {
         "name": "🏕 キャンジョ コーポレート + キャンプコンサル",
-        "ga4_id": "BSWF4PM45S",          # G- を除いた値
+        "ga4_id": "349970496",
         "gsc_url": os.getenv("GSC_CAMJYO", "https://www.camjyo.com/"),
         "url": "https://www.camjyo.com/",
     },
     {
         "name": "🪔 CRYSTAL INCENSE",
-        "ga4_id": "Q9YT04QEHX",
+        "ga4_id": "475744421",
         "gsc_url": os.getenv("GSC_CRYSTAL", "https://crystalinsence.com/"),
         "url": "https://crystalinsence.com/",
     },
     {
         "name": "🚐 VANTRIP JAPAN",
-        "ga4_id": "RC4937NTHC",
+        "ga4_id": "525730571",
         "gsc_url": os.getenv("GSC_VANTRIP", "https://vantripjapan.jp/"),
         "url": "https://vantripjapan.jp/",
     },
     {
         "name": "🚗 JDTLC (drive-japan-license.com)",
-        "ga4_id": "EN3734XZMP",
+        "ga4_id": "527328104",
         "gsc_url": os.getenv("GSC_JDTLC", "https://drive-japan-license.com/"),
         "url": "https://drive-japan-license.com/",
     },
