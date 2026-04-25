@@ -20,6 +20,9 @@ CRYSTAL INCENSE / キャンジョ グループ
 import os
 import json
 import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import date, timedelta
 
 # .env ファイルが存在すれば自動読み込み
@@ -67,8 +70,10 @@ SITES = [
     },
 ]
 
-LINE_TOKEN = os.getenv("LINE_NOTIFY_TOKEN", "")
-CREDS_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "service_account.json")
+GMAIL_USER     = os.getenv("GMAIL_USER", "")
+GMAIL_APP_PASS = os.getenv("GMAIL_APP_PASSWORD", "")
+REPORT_TO      = os.getenv("REPORT_TO", GMAIL_USER)
+CREDS_PATH     = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "service_account.json")
 
 SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
 
@@ -287,21 +292,32 @@ def build_report(site: dict, ga4: dict, gsc: dict, start: str, end: str) -> str:
 
     return "\n".join(lines)
 
-# ━━━ LINE Notify 送信 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━ メール送信 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def send_line(message: str):
-    if not LINE_TOKEN:
-        print("[LINE] トークン未設定 - コンソール出力のみ")
+def send_report(message: str, subject: str = None):
+    if not GMAIL_USER or not GMAIL_APP_PASS:
+        print("[メール] 設定未完了 - コンソール出力のみ")
         print(message)
         return
-    url = "https://notify-api.line.me/api/notify"
-    headers = {"Authorization": f"Bearer {LINE_TOKEN}"}
-    # LINE Notifyは1回2000文字制限 → 分割送信
-    chunk_size = 1900
-    for i in range(0, len(message), chunk_size):
-        chunk = message[i:i+chunk_size]
-        requests.post(url, headers=headers, data={"message": chunk})
-        print(f"[LINE] 送信済み ({i}〜{i+len(chunk)}文字)")
+
+    if not subject:
+        subject = f"🌿 週次レポート {date.today().strftime('%Y-%m-%d')} — Canjo Group"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = GMAIL_USER
+    msg["To"]      = REPORT_TO
+
+    # プレーンテキスト本文
+    msg.attach(MIMEText(message, "plain", "utf-8"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(GMAIL_USER, GMAIL_APP_PASS)
+            server.sendmail(GMAIL_USER, REPORT_TO, msg.as_string())
+        print(f"[メール] 送信完了 → {REPORT_TO}")
+    except Exception as e:
+        print(f"[メール] 送信エラー: {e}")
 
 # ━━━ メイン ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -337,7 +353,7 @@ def main():
 
     full_report += "\n\n📊 レポート終了\n改善提案は翌朝 Claude Code から送信されます。"
 
-    send_line(full_report)
+    send_report(full_report)
     print("\n✅ 完了")
 
 if __name__ == "__main__":
